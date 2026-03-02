@@ -6,8 +6,9 @@ import {
   QueryCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { CompletedGameRecord, UserRecord } from '@oh-hell/shared';
+import { IUserRepository } from './IUserRepository';
 
-export class DynamoDBService {
+export class DynamoDBService implements IUserRepository {
   private readonly docClient: DynamoDBDocumentClient;
   private readonly usersTable: string;
   private readonly gamesTable: string;

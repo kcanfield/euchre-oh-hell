@@ -3,11 +3,15 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
-import { DynamoDBService } from '../services/DynamoDBService';
+import { IUserRepository } from '../services/IUserRepository';
 import { UserRecord } from '@oh-hell/shared';
 
 const router = Router();
-const dynamoDBService = new DynamoDBService();
+let dynamoDBService: IUserRepository;
+
+export function setUserRepository(repo: IUserRepository): void {
+  dynamoDBService = repo;
+}
 
 const SALT_ROUNDS = 10;
 

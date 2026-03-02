@@ -8,7 +8,7 @@ import {
   SocketData,
 } from '@oh-hell/shared';
 import { gameStore } from '../game/GameStore';
-import { DynamoDBService } from '../services/DynamoDBService';
+import { IUserRepository } from '../services/IUserRepository';
 import { IdleMonitor } from '../services/IdleMonitor';
 
 type AppServer = Server<
@@ -57,7 +57,7 @@ function findSocketByPlayerId(
 export function registerGameHandlers(
   io: AppServer,
   socket: AppSocket,
-  dynamoDBService: DynamoDBService,
+  dynamoDBService: IUserRepository,
   idleMonitor: IdleMonitor,
 ): void {
   const { playerId } = socket.data;

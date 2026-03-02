@@ -9,12 +9,14 @@ import {
   ServerToClientEvents,
   SocketData,
 } from '@oh-hell/shared';
-import authRouter from './routes/auth';
+import authRouter, { setUserRepository } from './routes/auth';
 import { socketAuthMiddleware } from './socket/middleware';
 import { registerLobbyHandlers } from './socket/lobbyHandlers';
 import { registerGameHandlers } from './socket/gameHandlers';
 import { registerDisconnectHandler } from './socket/disconnectHandler';
 import { DynamoDBService } from './services/DynamoDBService';
+import { InMemoryStore } from './services/InMemoryStore';
+import { IUserRepository } from './services/IUserRepository';
 import { createIdleMonitor } from './services/IdleMonitor';
 
 const PORT = process.env.PORT ?? 3001;
@@ -47,7 +49,17 @@ app.get('/api/status', (_req, res) => {
 
 // ─── Services ─────────────────────────────────────────────────────────────────
 
-const dynamoDBService = new DynamoDBService();
+const isLocalDev = process.env.LOCAL_DEV_MODE === 'true';
+const userRepository: IUserRepository = isLocalDev
+  ? new InMemoryStore()
+  : new DynamoDBService();
+
+if (isLocalDev) {
+  console.log('Running in LOCAL_DEV_MODE — using in-memory store (no AWS required)');
+}
+
+setUserRepository(userRepository);
+
 const idleMonitor = createIdleMonitor(io);
 
 // ─── Socket.IO ────────────────────────────────────────────────────────────────
@@ -58,7 +70,7 @@ io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id} (${socket.data.username})`);
 
   registerLobbyHandlers(io, socket, idleMonitor);
-  registerGameHandlers(io, socket, dynamoDBService, idleMonitor);
+  registerGameHandlers(io, socket, userRepository, idleMonitor);
   registerDisconnectHandler(io, socket);
 
   idleMonitor.recordActivity();
