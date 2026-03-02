@@ -1,0 +1,12 @@
+Build an online, browser-accessible version of the trick-taking card game "Oh Hell!". Use web-native technologies, specifically TypeScript, allowing users to play immediately in their browser without downloading software.  
+
+The front-end technology stack will be Typescript and React.  The backend will be Typescript and Node.js.  To make the game interactive, a real-time connection between front-end and back-end using Socket.IO will be used, making the web page into a multi-user game where card moves happen in real-time.  
+
+Since "Oh Hell" involves bidding and exact trick-taking, robust server-side logic must be written to handle card dealing, turn management, and scoring, among other things.  
+
+The rules of the game are in the file: "oh-hell-rules.txt" found in the root folder of this project.
+
+Build both the front-end and back-end of this game application.
+
+This game will be deployed to AWS.  Create the necessary terraform files to deploy the infrastructure and code.  Put all terraform into a folder named "iac".
+

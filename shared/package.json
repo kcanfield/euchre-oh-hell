@@ -1,0 +1,14 @@
+{
+  "name": "@oh-hell/shared",
+  "version": "1.0.0",
+  "description": "Shared types and Socket.IO event contracts for Oh Hell!",
+  "main": "dist/types/index.js",
+  "types": "dist/types/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,0 +1,40 @@
+"oh hell" euchre rules:
+=======================
+
+When people refer to "Oh Hell Euchre," they usually mean a variation of Oh Hell (also known as Blackout, Elevator, or Up and Down the River) that uses individual bidding rather than Euchre’s team-based play. 
+
+The Objective:
+--------------
+The goal is to bid the exact number of tricks you will win in a round. Scoring depends on accuracy, not just winning many tricks. 
+
+Game Setup:
+--------------
+Players: 3 to 7 (best with 4–6). Unlike Euchre, there are no partners.
+
+Deck: Standard 52-card deck (Aces high, 2s low).
+
+The Deal (The "Elevator"): The number of cards dealt changes each round.
+Common pattern: Start with 10 cards each, then 9, 8... down to 1, and then back up to 10.
+
+Trump: After dealing, the next card in the deck is flipped to determine the trump suit for that round. 
+
+
+Bidding & Gameplay:
+--------------
+Bidding: Starting left of the dealer, each player calls out how many tricks they think they will win (from 0 to the number of cards in their hand).
+
+The Hook (Screw the Dealer): The dealer cannot bid a number that would make the total bids equal the number of tricks available. This ensures at least one person "goes down" (fails their bid).
+
+Playing: The player to the dealer’s left leads the first card. You must follow suit if possible. If you can't, you may play a trump card or any other card.
+
+Winning Tricks: The highest trump wins. If no trump is played, the highest card of the led suit wins. 
+
+
+Scoring:
+--------------
+Successful Bid: 10 points + 1 point for every trick taken (e.g., bidding 2 and winning 2 earns 12 points).
+
+Failed Bid: Usually 0 points, or 1 point per trick taken without the 10-point bonus.
+Zero Bid: Making a bid of zero is often worth 10 points (sometimes 5). 
+
+The player with the highest cumulative score at the end of the final round wins
