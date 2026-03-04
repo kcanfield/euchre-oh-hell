@@ -1,6 +1,9 @@
 import React from 'react';
 import { useServerStatus } from '../../hooks/useServerStatus';
 
+const isLocalDev = !import.meta.env.VITE_API_GATEWAY_URL ||
+  (import.meta.env.VITE_API_GATEWAY_URL as string).includes('placeholder');
+
 export function ServerStatusBanner() {
   const { status, isLoading, isStarting, startServer } = useServerStatus();
 
@@ -44,21 +47,23 @@ export function ServerStatusBanner() {
           ? 'Game server is offline.'
           : 'Server status unknown.'}
       </span>
-      <button
-        onClick={startServer}
-        disabled={isStarting}
-        style={{
-          padding: '0.25rem 0.75rem',
-          background: '#dc2626',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-        }}
-      >
-        Start Server
-      </button>
+      {!isLocalDev && (
+        <button
+          onClick={startServer}
+          disabled={isStarting}
+          style={{
+            padding: '0.25rem 0.75rem',
+            background: '#dc2626',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+          }}
+        >
+          Start Server
+        </button>
+      )}
     </div>
   );
 }
