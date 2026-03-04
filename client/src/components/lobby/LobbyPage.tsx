@@ -19,24 +19,15 @@ export function LobbyPage({ socket, connected }: Props) {
   const navigate = useNavigate();
   const { playerId, username, logout } = useAuth();
   const { state, dispatch } = useGame();
-  const { createLobby, joinLobby, leaveLobby, startGame } = useGameActions(socket);
+  const { createLobby, joinLobby, leaveLobby, startGame } = useGameActions(
+    socket,
+    (gameId) => navigate(`/game/${gameId}`),
+  );
 
   const [joinGameId, setJoinGameId] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState('');
-
-  // Listen for game start to navigate
-  React.useEffect(() => {
-    if (!socket) return;
-    const handleGameStarted = ({ gameId }: { gameId: string }) => {
-      navigate(`/game/${gameId}`);
-    };
-    socket.on('lobby:gameStarted', handleGameStarted);
-    return () => {
-      socket.off('lobby:gameStarted', handleGameStarted);
-    };
-  }, [socket, navigate]);
 
   const handleCreate = async () => {
     setError('');

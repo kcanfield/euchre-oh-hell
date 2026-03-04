@@ -12,6 +12,9 @@ build/
 .terraform.lock.hcl
 iac/.terraform-tmp/
 
+# Local dev data store
+server/data/
+
 # Logs
 *.log
 npm-debug.log*

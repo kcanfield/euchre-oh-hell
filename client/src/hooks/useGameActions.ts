@@ -1,14 +1,24 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Socket } from 'socket.io-client';
 import { ServerToClientEvents, ClientToServerEvents } from '@oh-hell/shared';
 import { useGame } from '../context/GameContext';
 
 type GameSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-export function useGameActions(socket: GameSocket | null) {
+export function useGameActions(
+  socket: GameSocket | null,
+  onGameStarted?: (gameId: string) => void,
+) {
   const { state, dispatch } = useGame();
 
-  // Bind socket events to dispatch
+  // Keep a ref to the latest state so event handlers never have stale closures,
+  // without needing to re-subscribe every time state changes.
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  const onGameStartedRef = useRef(onGameStarted);
+  onGameStartedRef.current = onGameStarted;
+
   useEffect(() => {
     if (!socket) return;
 
@@ -19,132 +29,112 @@ export function useGameActions(socket: GameSocket | null) {
 
     socket.on('lobby:gameStarted', ({ gameId }) => {
       dispatch({ type: 'SET_GAME_ID', gameId });
+      onGameStartedRef.current?.(gameId);
     });
 
     socket.on('game:roundStarted', ({ round, scores, gameId }) => {
+      const s = stateRef.current;
       dispatch({ type: 'SET_GAME_ID', gameId });
       dispatch({
         type: 'SET_GAME_STATE',
         gameState: {
           gameId,
           status: round.phase === 'bidding' ? 'bidding' : 'playing',
-          players: state.gameState?.players ?? state.lobby?.players ?? [],
-          hostId: state.gameState?.hostId ?? state.lobby?.hostId ?? '',
-          totalRounds: state.gameState?.totalRounds ?? 0,
-          currentRoundIndex: state.gameState
-            ? state.gameState.currentRoundIndex + 1
-            : 0,
+          players: s.gameState?.players ?? s.lobby?.players ?? [],
+          hostId: s.gameState?.hostId ?? s.lobby?.hostId ?? '',
+          totalRounds: s.gameState?.totalRounds ?? 0,
+          currentRoundIndex: s.gameState ? s.gameState.currentRoundIndex + 1 : 0,
           currentRound: round,
           scores,
           winnerId: null,
-          startedAt: state.gameState?.startedAt ?? new Date().toISOString(),
+          startedAt: s.gameState?.startedAt ?? new Date().toISOString(),
         },
       });
     });
 
-    socket.on('game:biddingStarted', ({ gameId, dealerId, trumpCard, trumpSuit, handSize, firstBidderId }) => {
-      if (state.gameState) {
-        dispatch({
-          type: 'SET_GAME_STATE',
-          gameState: {
-            ...state.gameState,
-            status: 'bidding',
-            currentRound: state.gameState.currentRound
-              ? {
-                  ...state.gameState.currentRound,
-                  phase: 'bidding',
-                  dealerId,
-                  trumpCard,
-                  trumpSuit,
-                  handSize,
-                  currentPlayerId: firstBidderId,
-                }
-              : null,
-          },
-        });
-      }
-    });
-
-    socket.on('game:bidPlaced', ({ bids }) => {
-      if (!state.gameState?.currentRound) return;
+    socket.on('game:biddingStarted', ({ dealerId, trumpCard, trumpSuit, handSize, firstBidderId }) => {
+      const s = stateRef.current;
+      if (!s.gameState) return;
       dispatch({
         type: 'SET_GAME_STATE',
         gameState: {
-          ...state.gameState,
-          currentRound: { ...state.gameState.currentRound, bids },
+          ...s.gameState,
+          status: 'bidding',
+          currentRound: s.gameState.currentRound
+            ? { ...s.gameState.currentRound, phase: 'bidding', dealerId, trumpCard, trumpSuit, handSize, currentPlayerId: firstBidderId }
+            : null,
         },
+      });
+    });
+
+    socket.on('game:bidPlaced', ({ bids }) => {
+      const s = stateRef.current;
+      if (!s.gameState?.currentRound) return;
+      dispatch({
+        type: 'SET_GAME_STATE',
+        gameState: { ...s.gameState, currentRound: { ...s.gameState.currentRound, bids } },
       });
     });
 
     socket.on('game:biddingComplete', ({ firstPlayerId }) => {
-      if (!state.gameState?.currentRound) return;
+      const s = stateRef.current;
+      if (!s.gameState?.currentRound) return;
       dispatch({
         type: 'SET_GAME_STATE',
         gameState: {
-          ...state.gameState,
+          ...s.gameState,
           status: 'playing',
-          currentRound: {
-            ...state.gameState.currentRound,
-            phase: 'playing',
-            currentPlayerId: firstPlayerId,
-          },
+          currentRound: { ...s.gameState.currentRound, phase: 'playing', currentPlayerId: firstPlayerId },
         },
       });
     });
 
     socket.on('game:cardPlayed', ({ currentTrick, nextPlayerId }) => {
-      if (!state.gameState?.currentRound) return;
+      const s = stateRef.current;
+      if (!s.gameState?.currentRound) return;
       dispatch({
         type: 'SET_GAME_STATE',
         gameState: {
-          ...state.gameState,
+          ...s.gameState,
           currentRound: {
-            ...state.gameState.currentRound,
+            ...s.gameState.currentRound,
             currentTrick,
-            currentPlayerId: nextPlayerId ?? state.gameState.currentRound.currentPlayerId,
+            currentPlayerId: nextPlayerId ?? s.gameState.currentRound.currentPlayerId,
           },
         },
       });
     });
 
     socket.on('game:trickComplete', ({ tricksTaken, nextPlayerId }) => {
-      if (!state.gameState?.currentRound) return;
+      const s = stateRef.current;
+      if (!s.gameState?.currentRound) return;
       dispatch({
         type: 'SET_GAME_STATE',
         gameState: {
-          ...state.gameState,
+          ...s.gameState,
           currentRound: {
-            ...state.gameState.currentRound,
+            ...s.gameState.currentRound,
             currentTrick: [],
             tricksTaken,
-            currentPlayerId: nextPlayerId ?? state.gameState.currentRound.currentPlayerId,
+            currentPlayerId: nextPlayerId ?? s.gameState.currentRound.currentPlayerId,
           },
         },
       });
     });
 
     socket.on('game:roundComplete', ({ roundResults, scores }) => {
+      const s = stateRef.current;
       dispatch({ type: 'SET_ROUND_RESULTS', results: roundResults });
-      if (state.gameState) {
-        dispatch({
-          type: 'SET_GAME_STATE',
-          gameState: { ...state.gameState, status: 'round_summary', scores },
-        });
+      if (s.gameState) {
+        dispatch({ type: 'SET_GAME_STATE', gameState: { ...s.gameState, status: 'round_summary', scores } });
       }
     });
 
     socket.on('game:complete', ({ finalScores, winnerId }) => {
+      const s = stateRef.current;
       dispatch({ type: 'SET_FINAL_SCORES', scores: finalScores, winnerId });
-      if (state.gameState) {
-        dispatch({
-          type: 'SET_GAME_STATE',
-          gameState: {
-            ...state.gameState,
-            status: 'game_over',
-            winnerId,
-            scores: finalScores,
-          },
-        });
+      if (s.gameState) {
+        dispatch({ type: 'SET_GAME_STATE', gameState: { ...s.gameState, status: 'game_over', winnerId, scores: finalScores } });
       }
     });
 
@@ -170,9 +160,8 @@ export function useGameActions(socket: GameSocket | null) {
       socket.off('game:stateSync');
       socket.off('game:error');
     };
-  }, [socket, dispatch, state.gameState, state.lobby]);
+  }, [socket, dispatch]); // only re-subscribe when socket or dispatch changes
 
-  // Action functions
   const createLobby = useCallback(() => {
     return new Promise<string>((resolve, reject) => {
       if (!socket) return reject(new Error('Not connected'));
@@ -236,19 +225,9 @@ export function useGameActions(socket: GameSocket | null) {
   const requestState = useCallback((gameId: string) => {
     if (!socket) return;
     socket.emit('game:requestState', { gameId }, (res) => {
-      if ('gameState' in res) {
-        dispatch({ type: 'SET_GAME_STATE', gameState: res.gameState });
-      }
+      if ('gameState' in res) dispatch({ type: 'SET_GAME_STATE', gameState: res.gameState });
     });
   }, [socket, dispatch]);
 
-  return {
-    createLobby,
-    joinLobby,
-    leaveLobby,
-    startGame,
-    placeBid,
-    playCard,
-    requestState,
-  };
+  return { createLobby, joinLobby, leaveLobby, startGame, placeBid, playCard, requestState };
 }
