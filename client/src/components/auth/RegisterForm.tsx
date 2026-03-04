@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
 interface Props {
@@ -31,7 +32,8 @@ export function RegisterForm({ onSwitch }: Props) {
     try {
       await register(username, password);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      const serverMsg = axios.isAxiosError(err) ? err.response?.data?.error : undefined;
+      setError(serverMsg ?? (err instanceof Error ? err.message : 'Registration failed'));
     } finally {
       setIsLoading(false);
     }

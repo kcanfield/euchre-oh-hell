@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
 interface Props {
@@ -19,7 +20,8 @@ export function LoginForm({ onSwitch }: Props) {
     try {
       await login(username, password);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      const serverMsg = axios.isAxiosError(err) ? err.response?.data?.error : undefined;
+      setError(serverMsg ?? (err instanceof Error ? err.message : 'Login failed'));
     } finally {
       setIsLoading(false);
     }
